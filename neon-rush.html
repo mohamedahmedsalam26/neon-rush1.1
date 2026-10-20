@@ -1,0 +1,1135 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEON RUSH | لعبة النيون</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: white;
+  font-family: Arial, Tahoma, sans-serif;
+  background: #050816;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px;
+}
+
+.game {
+  width: 100%;
+  max-width: 900px;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.logo {
+  font-size: clamp(23px, 5vw, 36px);
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 2px;
+  color: #48faff;
+  text-shadow: 0 0 12px #00eaff;
+}
+
+.logo span {
+  color: #ff39d4;
+  text-shadow: 0 0 12px #ff39d4;
+}
+
+.stats {
+  display: flex;
+  gap: 8px;
+}
+
+.stat {
+  background: #10162b;
+  border: 1px solid #273858;
+  border-radius: 10px;
+  padding: 9px 12px;
+  min-width: 78px;
+  text-align: center;
+}
+
+.stat small {
+  display: block;
+  color: #9eb2d9;
+  font-size: 11px;
+  margin-bottom: 5px;
+}
+
+.stat strong {
+  font-size: 20px;
+  color: #4cfaff;
+}
+
+.screen {
+  position: relative;
+  overflow: hidden;
+  border: 2px solid #284c70;
+  border-radius: 15px;
+  box-shadow: 0 0 25px #00bfff22, inset 0 0 25px #00bfff0d;
+  background: #060a1c;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: none;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  text-align: center;
+  background: #030615c9;
+  backdrop-filter: blur(5px);
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.panel {
+  width: min(100%, 420px);
+}
+
+.panel h1 {
+  margin: 0 0 12px;
+  font-size: clamp(34px, 8vw, 56px);
+  color: #47f9ff;
+  text-shadow: 0 0 18px #00d9ff;
+}
+
+.panel p {
+  color: #d0dbf4;
+  line-height: 1.9;
+  font-size: 15px;
+}
+
+button {
+  border: 1px solid #43faff;
+  border-radius: 10px;
+  color: #04101b;
+  background: linear-gradient(120deg, #47f9ff, #8affd6);
+  font-weight: 900;
+  font-size: 16px;
+  padding: 12px 20px;
+  cursor: pointer;
+  box-shadow: 0 0 16px #00eaff44;
+  transition: transform .15s, filter .15s;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.15);
+}
+
+.instructions {
+  text-align: center;
+  color: #9eb2d9;
+  line-height: 1.8;
+  font-size: 13px;
+  padding: 10px 0;
+}
+
+.mobile-controls {
+  display: none;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px;
+}
+
+.mobile-controls button {
+  width: 60px;
+  height: 50px;
+  padding: 0;
+  font-size: 22px;
+  background: #101c36;
+  color: #55faff;
+  border-color: #315c85;
+  touch-action: none;
+}
+
+@media (pointer: coarse), (max-width: 600px) {
+  .mobile-controls {
+    display: flex;
+  }
+}
+#shopBtn {
+  padding: 10px 14px;
+  background: linear-gradient(120deg, #ff39d4, #7b61ff);
+  color: white;
+  border: 1px solid #ff8bea;
+}
+
+.shop-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(2, 5, 20, 0.92);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.shop-panel[hidden] {
+  display: none;
+}
+
+.shop-card {
+  width: min(100%, 470px);
+  background: #0d142b;
+  border: 1px solid #3bdeff;
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: 0 0 30px #00dfff33;
+}
+
+.shop-card h2 {
+  color: #4cfaff;
+  text-align: center;
+}
+
+.skin-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 13px 0;
+  border-bottom: 1px solid #283451;
+  font-size: 14px;
+}
+
+.skin-item button {
+  padding: 8px 12px;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+#shopMessage {
+  color: #ffd65a;
+  line-height: 1.7;
+  text-align: center;
+}
+</style>
+</head>
+
+<body>
+<div class="game">
+
+ 
+ <header>
+   <div id="shopPanel" class="shop-panel" hidden>
+  <div class="shop-card">
+    <h2>🛍️ متجر NEON RUSH</h2>
+    <p>رصيدك: <strong id="wallet">0</strong> عملة</p>
+
+    <div class="skin-item">
+      <span>🔵 شخصية النيون الزرقاء — مجانية</span>
+      <button class="skin-btn" data-skin="blue">اختيار</button>
+    </div>
+
+    <div class="skin-item">
+      <span>🩷 شخصية الفانتوم — 500 عملة</span>
+      <button class="skin-btn" data-skin="pink">شراء</button>
+    </div>
+
+    <div class="skin-item">
+      <span>🟡 شخصية جولدن بولت — 1200 عملة</span>
+      <button class="skin-btn" data-skin="gold">شراء</button>
+    </div>
+
+    <p id="shopMessage">اجمع العملات وافتح شخصيات جديدة!</p>
+    <button id="closeShop">رجوع للعبة</button>
+  </div>
+</div>
+ <div class="logo">NEON <span>RUSH</span></div>
+     <button id="pauseBtn" type="button"
+        style="padding:9px 12px;font-size:14px">
+  ⏸ إيقاف
+</button>
+    <div class="stats">
+      <div class="stat">
+        <small>النقاط</small>
+        <strong id="score">0</strong>
+      </div>
+      <div class="stat">
+        <small>العملات</small>
+        <strong id="coins">0</strong>
+      </div>
+      <div class="stat">
+        <small>أفضل نتيجة</small>
+        <strong id="best">0</strong>
+      </div>
+    </div>
+ <button id="shopBtn" type="button">
+  🛍️ المتجر
+</button>
+ </header>
+
+  <div class="screen">
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+    <div class="overlay" id="overlay">
+      <div class="panel">
+        <h1 id="overlayTitle">NEON RUSH</h1>
+        <p id="overlayText">
+          اهرب من العقبات، اجمع العملات، وحطّم رقمك القياسي في مدينة النيون!
+        </p>
+        <button id="startBtn">ابدأ اللعب 🚀</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mobile-controls">
+    <button id="leftBtn" aria-label="يسار">◀</button>
+    <button id="upBtn" aria-label="أعلى">▲</button>
+    <button id="downBtn" aria-label="أسفل">▼</button>
+    <button id="rightBtn" aria-label="يمين">▶</button>
+  </div>
+
+  <div class="instructions">
+    التحكم: الأسهم أو W A S D — اجمع العملات الذهبية وتفادَ المربعات الحمراء.
+    <br>
+    اضغط Enter أو Space لبدء اللعب أو إعادة الجولة.
+  </div>
+</div>
+
+<script>
+"use strict";
+
+// ==================================
+// 1. إعداد اللعبة
+// ==================================
+
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+const scoreEl = document.getElementById("score");
+const coinsEl = document.getElementById("coins");
+const bestEl = document.getElementById("best");
+
+const overlay = document.getElementById("overlay");
+const overlayTitle = document.getElementById("overlayTitle");
+const overlayText = document.getElementById("overlayText");
+
+const startBtn = document.getElementById("startBtn");
+// ===== متجر NEON RUSH =====
+
+const shopBtn = document.getElementById("shopBtn");
+const shopPanel = document.getElementById("shopPanel");
+const walletEl = document.getElementById("wallet");
+const shopMessage = document.getElementById("shopMessage");
+
+const skinPrices = {
+  blue: 0,
+  pink: 500,
+  gold: 1200
+};
+
+let walletCoins = 0;
+let ownedSkins = ["blue"];
+let selectedSkin = "blue";
+
+try {
+  walletCoins = Number(
+    localStorage.getItem("neonWallet")
+  ) || 0;
+
+  const savedSkins = JSON.parse(
+    localStorage.getItem("neonSkins") || '["blue"]'
+  );
+
+  if (Array.isArray(savedSkins)) {
+    ownedSkins = [...new Set(["blue", ...savedSkins])]
+      .filter(s => Object.hasOwn(skinPrices, s));
+  }
+
+  const savedSkin = localStorage.getItem("neonSelectedSkin");
+
+  if (ownedSkins.includes(savedSkin)) {
+    selectedSkin = savedSkin;
+  }
+} catch (e) {
+  // يمكن اللعب حتى لو تعذر الحفظ.
+}
+
+function saveShop() {
+  try {
+    localStorage.setItem("neonWallet", walletCoins);
+    localStorage.setItem("neonSkins", JSON.stringify(ownedSkins));
+    localStorage.setItem("neonSelectedSkin", selectedSkin);
+  } catch (e) {}
+}
+
+function renderShop() {
+  walletEl.textContent = walletCoins;
+
+  document.querySelectorAll(".skin-btn").forEach(btn => {
+    const skin = btn.dataset.skin;
+
+    if (selectedSkin === skin) {
+      btn.textContent = "تم الاختيار ✓";
+    } else if (ownedSkins.includes(skin)) {
+      btn.textContent = "اختيار";
+    } else {
+      btn.textContent = "شراء";
+    }
+  });
+}
+
+shopBtn.addEventListener("click", () => {
+  renderShop();
+  shopMessage.textContent = "اختار شخصيتك المفضلة!";
+  shopPanel.hidden = false;
+});
+
+document.getElementById("closeShop").addEventListener("click", () => {
+  shopPanel.hidden = true;
+});
+
+document.querySelectorAll(".skin-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const skin = btn.dataset.skin;
+
+    if (ownedSkins.includes(skin)) {
+      selectedSkin = skin;
+      saveShop();
+      shopMessage.textContent = "تم اختيار الشخصية بنجاح! ✨";
+    } else {
+      const price = skinPrices[skin];
+
+      if (walletCoins < price) {
+        shopMessage.textContent =
+          "لسه محتاج " + (price - walletCoins) + " عملة إضافية!";
+        return;
+      }
+
+      walletCoins -= price;
+      ownedSkins.push(skin);
+      selectedSkin = skin;
+
+      saveShop();
+
+      shopMessage.textContent =
+        "مبروك! اشتريت الشخصية الجديدة 🎉";
+    }
+
+    renderShop();
+  });
+});
+
+renderShop();
+const pauseBtn = document.getElementById("pauseBtn");
+
+function togglePause() {
+  if (state === "playing") {
+    state = "paused";
+
+    overlayTitle.textContent = "استراحة ⏸️";
+    overlayText.textContent =
+      "خد نفسك شوية، ولما تكون جاهز كمّل التحدي!";
+    startBtn.textContent = "استكمال اللعب ▶️";
+
+    overlay.classList.remove("hidden");
+    pauseBtn.textContent = "▶ استكمال";
+
+  } else if (state === "paused") {
+    state = "playing";
+
+    overlay.classList.add("hidden");
+    pauseBtn.textContent = "⏸ إيقاف";
+  }
+}
+
+pauseBtn.addEventListener("click", togglePause);
+const W = canvas.width;
+const H = canvas.height;
+
+let state = "ready";
+let score = 0;
+let coinsCollected = 0;
+let best = loadBest();
+let elapsed = 0;
+let speed = 230;
+let spawnTimer = 0;
+let coinTimer = 0;
+let roadOffset = 0;
+let lastTime = 0;
+let objects = [];
+let particles = [];
+
+const keys = {};
+const stars = [];
+
+const player = {
+  x: W / 2,
+  y: H - 110,
+  r: 16,
+  vx: 0,
+  vy: 0,
+  invulnerable: 0
+};
+
+bestEl.textContent = best;
+
+// ==================================
+// 2. حفظ أفضل نتيجة
+// ==================================
+
+function loadBest() {
+  try {
+    return Number(localStorage.getItem("neonRushBest")) || 0;
+  } catch (e) {
+    return 0;
+  }
+}
+
+function saveBest() {
+  try {
+    localStorage.setItem("neonRushBest", String(best));
+  } catch (e) {
+    // اللعبة تستمر حتى لو تعذر الحفظ.
+  }
+}
+
+// ==================================
+// 3. إنشاء خلفية النجوم
+// ==================================
+
+for (let i = 0; i < 100; i++) {
+  stars.push({
+    x: Math.random() * W,
+    y: Math.random() * H,
+    size: Math.random() * 2 + 0.5,
+    speed: Math.random() * 35 + 12
+  });
+}
+
+// ==================================
+// 4. بدء اللعبة وإنهاء الجولة
+// ==================================
+
+function startGame() {
+  score = 0;
+  coinsCollected = 0;
+  elapsed = 0;
+  speed = 230;
+  spawnTimer = 0.4;
+  coinTimer = 1.0;
+  roadOffset = 0;
+  objects = [];
+  particles = [];
+
+  player.x = W / 2;
+  player.y = H - 110;
+  player.vx = 0;
+  player.vy = 0;
+  player.invulnerable = 0;
+
+  state = "playing";
+  overlay.classList.add("hidden");
+  updateStats();
+}
+
+function endGame() {
+  if (state !== "playing") return;
+
+  state = "gameover";
+  burst(player.x, player.y, "#ff397a", 30);
+
+  const finalScore = Math.floor(score);
+
+  if (finalScore > best) {
+    best = finalScore;
+    saveBest();
+  }
+
+  bestEl.textContent = best;
+
+  overlayTitle.textContent = "انتهت الجولة!";
+  overlayText.innerHTML =
+    "نتيجتك: <b style='color:#51faff'>" +
+    finalScore +
+    "</b><br>" +
+    "العملات المجمعة: <b style='color:#ffd65a'>" +
+    coinsCollected +
+    "</b><br>جاهز تحاول تاني وتحطّم رقمك؟";
+
+  startBtn.textContent = "العب مرة أخرى 🔄";
+  overlay.classList.remove("hidden");
+}
+
+startBtn.addEventListener("click", function() {
+  if (state === "paused") {
+    togglePause();
+  } else {
+    startGame();
+    pauseBtn.textContent = "⏸ إيقاف";
+  }
+});
+
+// ==================================
+// 5. التحكم بالكيبورد
+// ==================================
+
+const movementKeys = [
+  "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown",
+  "KeyA", "KeyD", "KeyW", "KeyS"
+];
+
+document.addEventListener("keydown", function(e) {
+  if (
+    movementKeys.includes(e.code) ||
+    e.code === "Space"
+  ) {
+    e.preventDefault();
+  }
+
+  keys[e.code] = true;
+
+  if (
+    (e.code === "Enter" || e.code === "Space") &&
+    state !== "playing"
+  ) {
+    startGame();
+  }
+});
+
+document.addEventListener("keyup", function(e) {
+  keys[e.code] = false;
+});
+
+window.addEventListener("blur", function() {
+  for (const key in keys) keys[key] = false;
+});
+
+// ==================================
+// 6. أزرار التحكم للموبايل
+// ==================================
+
+function bindButton(id, key) {
+  const button = document.getElementById(id);
+
+  button.addEventListener("pointerdown", function(e) {
+    e.preventDefault();
+    keys[key] = true;
+    button.setPointerCapture(e.pointerId);
+  });
+
+  function release(e) {
+    e.preventDefault();
+    keys[key] = false;
+  }
+
+  button.addEventListener("pointerup", release);
+  button.addEventListener("pointercancel", release);
+  button.addEventListener("lostpointercapture", function() {
+    keys[key] = false;
+  });
+}
+
+bindButton("leftBtn", "ArrowLeft");
+bindButton("rightBtn", "ArrowRight");
+bindButton("upBtn", "ArrowUp");
+bindButton("downBtn", "ArrowDown");
+
+// ==================================
+// 7. إنشاء العقبات والعملات
+// ==================================
+
+function spawnObstacle() {
+  const size = 28 + Math.random() * 16;
+
+  objects.push({
+    type: "obstacle",
+    x: 55 + Math.random() * (W - 110),
+    y: -size - 5,
+    size: size,
+    rotation: Math.random() * 0.3 - 0.15,
+    color: Math.random() < 0.5 ? "#ff386b" : "#ff6a40"
+  });
+}
+
+function spawnCoin() {
+  objects.push({
+    type: "coin",
+    x: 45 + Math.random() * (W - 90),
+    y: -25,
+    r: 11,
+    phase: Math.random() * Math.PI * 2
+  });
+}
+
+// ==================================
+// 8. المؤثرات والجسيمات
+// ==================================
+
+function burst(x, y, color, count) {
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const velocity = Math.random() * 170 + 35;
+
+    particles.push({
+      x: x,
+      y: y,
+      vx: Math.cos(angle) * velocity,
+      vy: Math.sin(angle) * velocity,
+      life: Math.random() * 0.5 + 0.3,
+      maxLife: 0.8,
+      size: Math.random() * 4 + 2,
+      color: color
+    });
+  }
+}
+
+function updateParticles(dt) {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.vx *= Math.pow(0.1, dt);
+    p.vy *= Math.pow(0.1, dt);
+    p.life -= dt;
+
+    if (p.life <= 0) {
+      particles.splice(i, 1);
+    }
+  }
+}
+
+// ==================================
+// 9. تحديث حركة اللعبة
+// ==================================
+
+function update(dt) {
+  updateParticles(dt);
+
+  for (const star of stars) {
+    star.y += star.speed * dt;
+
+    if (star.y > H) {
+      star.y = 0;
+      star.x = Math.random() * W;
+    }
+  }
+
+  if (state !== "playing") return;
+
+  elapsed += dt;
+
+  // السرعة تزيد بالتدريج.
+  speed = Math.min(230 + elapsed * 5, 460);
+  roadOffset = (roadOffset + speed * dt) % 60;
+
+  // حركة اللاعب.
+  let dx = 0;
+  let dy = 0;
+
+  if (keys.ArrowLeft || keys.KeyA) dx--;
+  if (keys.ArrowRight || keys.KeyD) dx++;
+  if (keys.ArrowUp || keys.KeyW) dy--;
+  if (keys.ArrowDown || keys.KeyS) dy++;
+
+  // الحركة القطرية لا تكون أسرع من الحركة العادية.
+  if (dx !== 0 && dy !== 0) {
+    dx *= 0.7071;
+    dy *= 0.7071;
+  }
+
+  const playerSpeed = 310;
+
+  player.x += dx * playerSpeed * dt;
+  player.y += dy * playerSpeed * dt;
+
+  player.x = Math.max(24, Math.min(W - 24, player.x));
+  player.y = Math.max(24, Math.min(H - 24, player.y));
+
+  player.invulnerable = Math.max(0, player.invulnerable - dt);
+
+  // إنشاء العقبات والعملات.
+  spawnTimer -= dt;
+  coinTimer -= dt;
+
+  if (spawnTimer <= 0) {
+    spawnObstacle();
+    spawnTimer = Math.max(
+      0.32,
+      0.85 - elapsed * 0.008
+    ) + Math.random() * 0.35;
+  }
+
+  if (coinTimer <= 0) {
+    spawnCoin();
+    coinTimer = 0.65 + Math.random() * 0.8;
+  }
+
+  // تحريك العناصر وفحص التصادم.
+  for (let i = objects.length - 1; i >= 0; i--) {
+    const obj = objects[i];
+
+    obj.y += speed * dt;
+
+    if (obj.type === "coin") {
+      obj.phase += dt * 5;
+
+      const distance = Math.hypot(
+        player.x - obj.x,
+        player.y - obj.y
+      );
+
+      if (distance < player.r + obj.r + 3) {
+       
+        
+       coinsCollected++;
+walletCoins++;
+
+saveShop();
+renderShop();
+
+score += 100;
+burst(obj.x, obj.y, "#ffd65a", 12);
+        objects.splice(i, 1);
+        continue;
+      }
+    } else {
+      const half = obj.size / 2;
+
+      const closestX = Math.max(
+        obj.x - half,
+        Math.min(player.x, obj.x + half)
+      );
+
+      const closestY = Math.max(
+        obj.y - half,
+        Math.min(player.y, obj.y + half)
+      );
+
+      const distance = Math.hypot(
+        player.x - closestX,
+        player.y - closestY
+      );
+
+      if (distance < player.r && player.invulnerable <= 0) {
+        endGame();
+        break;
+      }
+    }
+
+    if (obj.y > H + 50) {
+      objects.splice(i, 1);
+    }
+  }
+
+  if (state === "playing") {
+    score += dt * 10;
+    updateStats();
+  }
+}
+
+function updateStats() {
+  scoreEl.textContent = Math.floor(score);
+  coinsEl.textContent = coinsCollected;
+  bestEl.textContent = Math.max(best, Math.floor(score));
+}
+
+// ==================================
+// 10. رسم خلفية مدينة النيون
+// ==================================
+
+function drawBackground() {
+  const gradient = ctx.createLinearGradient(0, 0, 0, H);
+  gradient.addColorStop(0, "#090b24");
+  gradient.addColorStop(0.55, "#101332");
+  gradient.addColorStop(1, "#08091b");
+
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, W, H);
+
+  // النجوم.
+  for (const star of stars) {
+    ctx.fillStyle = "rgba(125,220,255,0.75)";
+    ctx.fillRect(star.x, star.y, star.size, star.size);
+  }
+
+  // مباني المدينة.
+  for (let i = 0; i < 13; i++) {
+    const bw = 42 + (i * 17 % 30);
+    const bh = 80 + (i * 47 % 150);
+    const bx = i * 67 - 15;
+    const by = H - bh;
+
+    ctx.fillStyle = i % 2 ? "#10142e" : "#14102e";
+    ctx.fillRect(bx, by, bw, bh);
+
+    ctx.strokeStyle = i % 2 ? "#243f79" : "#522b78";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(bx, by, bw, bh);
+
+    for (let wy = by + 12; wy < H - 10; wy += 19) {
+      for (let wx = bx + 8; wx < bx + bw - 5; wx += 14) {
+        ctx.fillStyle =
+          (Math.floor(wx + wy) % 3 === 0)
+          ? "#3cdbef"
+          : "#533a85";
+
+        ctx.globalAlpha = 0.6;
+        ctx.fillRect(wx, wy, 4, 7);
+      }
+    }
+  }
+
+  ctx.globalAlpha = 1;
+
+  // أرضية الطريق.
+  ctx.fillStyle = "#080d22";
+  ctx.fillRect(0, 0, W, H);
+
+  // خطوط منظور نيون.
+  ctx.save();
+  ctx.strokeStyle = "#152b52";
+  ctx.lineWidth = 1;
+
+  for (let y = -60 + roadOffset; y < H; y += 60) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(W, y);
+    ctx.stroke();
+  }
+
+  for (let x = -W; x <= W * 2; x += 80) {
+    ctx.beginPath();
+    ctx.moveTo(W / 2, H * 0.35);
+    ctx.lineTo(x, H);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+
+  // حدود مضيئة.
+  ctx.save();
+  ctx.shadowBlur = 15;
+  ctx.shadowColor = "#00eaff";
+  ctx.strokeStyle = "#00d9ff";
+  ctx.lineWidth = 2;
+
+  ctx.beginPath();
+  ctx.moveTo(10, 0);
+  ctx.lineTo(10, H);
+  ctx.moveTo(W - 10, 0);
+  ctx.lineTo(W - 10, H);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+// ==================================
+// 11. رسم اللاعب
+// ==================================
+
+function drawPlayer() {
+  if (
+    state === "gameover" ||
+    (player.invulnerable > 0 &&
+     Math.floor(performance.now() / 90) % 2 === 0)
+  ) {
+    return;
+  }
+
+  ctx.save();
+  ctx.translate(player.x, player.y);
+
+  // الهالة.
+  ctx.shadowBlur = 25;
+  ctx.shadowColor = "#00f6ff";
+
+  
+  const skinColors = {
+  blue: ["#b5ffff", "#28dfff", "#6b5dff"],
+  pink: ["#ffd0f5", "#ff39d4", "#a12cff"],
+  gold: ["#fff6ad", "#ffbf24", "#ff792b"]
+};
+
+const colors = skinColors[selectedSkin] || skinColors.blue;
+
+const gradient = ctx.createLinearGradient(-20, -20, 20, 20);
+gradient.addColorStop(0, colors[0]);
+gradient.addColorStop(0.5, colors[1]);
+gradient.addColorStop(1, colors[2]);
+
+  // جسم اللاعب.
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.moveTo(0, -22);
+  ctx.lineTo(17, 12);
+  ctx.lineTo(0, 7);
+  ctx.lineTo(-17, 12);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.shadowBlur = 0;
+
+  // تفاصيل البدلة.
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.fillStyle = "#ff47d9";
+  ctx.fillRect(-3, 6, 6, 9);
+
+  // أثر الحركة.
+  ctx.globalAlpha = 0.6;
+  ctx.fillStyle = "#00eaff";
+  ctx.beginPath();
+  ctx.moveTo(-6, 13);
+  ctx.lineTo(0, 30 + Math.random() * 7);
+  ctx.lineTo(6, 13);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.restore();
+}
+
+// ==================================
+// 12. رسم العقبات والعملات
+// ==================================
+
+function drawObjects() {
+  for (const obj of objects) {
+    if (obj.type === "coin") {
+      ctx.save();
+      ctx.translate(obj.x, obj.y);
+
+      const scale = 0.75 + Math.abs(Math.sin(obj.phase)) * 0.25;
+      ctx.scale(scale, 1);
+
+      ctx.shadowBlur = 18;
+      ctx.shadowColor = "#ffd64a";
+      ctx.fillStyle = "#ffd64a";
+
+      ctx.beginPath();
+      ctx.arc(0, 0, obj.r, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = "#fff5b5";
+      ctx.lineWidth = 3;
+
+      ctx.beginPath();
+      ctx.arc(0, 0, obj.r - 4, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.restore();
+    } else {
+      ctx.save();
+      ctx.translate(obj.x, obj.y);
+      ctx.rotate(obj.rotation);
+
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = obj.color;
+      ctx.fillStyle = "#210d29";
+      ctx.strokeStyle = obj.color;
+      ctx.lineWidth = 3;
+
+      ctx.fillRect(
+        -obj.size / 2,
+        -obj.size / 2,
+        obj.size,
+        obj.size
+      );
+
+      ctx.strokeRect(
+        -obj.size / 2,
+        -obj.size / 2,
+        obj.size,
+        obj.size
+      );
+
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = "#ff9db8";
+      ctx.lineWidth = 2;
+
+      ctx.beginPath();
+      ctx.moveTo(-obj.size * 0.25, -obj.size * 0.25);
+      ctx.lineTo(obj.size * 0.25, obj.size * 0.25);
+      ctx.moveTo(obj.size * 0.25, -obj.size * 0.25);
+      ctx.lineTo(-obj.size * 0.25, obj.size * 0.25);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+  }
+}
+
+// ==================================
+// 13. رسم المؤثرات
+// ==================================
+
+function drawParticles() {
+  for (const p of particles) {
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+    ctx.fillStyle = p.color;
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = p.color;
+
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+}
+
+// ==================================
+// 14. حلقة تشغيل اللعبة
+// ==================================
+
+function render() {
+  drawBackground();
+  drawObjects();
+  drawParticles();
+  drawPlayer();
+}
+
+function loop(timestamp) {
+  const dt = Math.min(
+    (timestamp - (lastTime || timestamp)) / 1000,
+    0.033
+  );
+
+  lastTime = timestamp;
+
+  update(dt);
+  render();
+
+  requestAnimationFrame(loop);
+}
+
+requestAnimationFrame(loop);
+
+</script>
+</body>
+</html>
